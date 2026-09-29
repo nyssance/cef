@@ -45,6 +45,9 @@ class MainContext {
   // Returns the background color.
   virtual cef_color_t GetBackgroundColor() = 0;
 
+  // Returns true if windowed browsers may use a non-opaque background color.
+  virtual bool AllowTransparency() = 0;
+
   // Returns true if the Views framework will be used as the global default.
   virtual bool UseViewsGlobal() = 0;
 

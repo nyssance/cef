@@ -438,13 +438,13 @@ typedef struct _cef_settings_t {
 
   ///
   /// Background color used for the browser before a document is loaded and when
-  /// no document color is specified. The alpha component must be either fully
-  /// opaque (0xFF) or fully transparent (0x00). If the alpha component is fully
-  /// opaque then the RGB components will be used as the background color. If
-  /// the alpha component is fully transparent for a windowed browser then the
-  /// default value of opaque white be used. If the alpha component is fully
-  /// transparent for a windowless (off-screen) browser then transparent
-  /// painting will be enabled.
+  /// no document color is specified. If the alpha component is fully opaque
+  /// (0xFF) then the RGB components will be used as the background color. If
+  /// the alpha component is fully transparent (0x00) for a windowless
+  /// (off-screen) browser then transparent painting will be enabled. For a
+  /// windowed browser the alpha component is preserved only when
+  /// |allow_transparency| is true (1); otherwise a non-opaque value falls back
+  /// to the default of opaque white.
   ///
   cef_color_t background_color;
 
@@ -526,6 +526,17 @@ typedef struct _cef_settings_t {
   /// previously encrypted data unreadable.
   ///
   cef_string_t keychain_account_name;
+
+  ///
+  /// Set to true (1) to allow a non-opaque |background_color| for windowed
+  /// browsers. When enabled the alpha component of |background_color| is
+  /// preserved, so a fully transparent value (including the default of 0)
+  /// enables transparent painting. The host window must support transparency
+  /// for the effect to be visible (for example a non-opaque NSWindow on macOS
+  /// or a window with the DWM frame extended into the client area on Windows).
+  /// Has no effect on windowless (off-screen) browsers.
+  ///
+  int allow_transparency;
 #endif
 } cef_settings_t;
 
@@ -717,13 +728,13 @@ typedef struct _cef_browser_settings_t {
 
   ///
   /// Background color used for the browser before a document is loaded and when
-  /// no document color is specified. The alpha component must be either fully
-  /// opaque (0xFF) or fully transparent (0x00). If the alpha component is fully
-  /// opaque then the RGB components will be used as the background color. If
-  /// the alpha component is fully transparent for a windowed browser then the
-  /// CefSettings.background_color value will be used. If the alpha component is
-  /// fully transparent for a windowless (off-screen) browser then transparent
-  /// painting will be enabled.
+  /// no document color is specified. If the alpha component is fully opaque
+  /// (0xFF) then the RGB components will be used as the background color. If
+  /// the alpha component is fully transparent (0x00) for a windowless
+  /// (off-screen) browser then transparent painting will be enabled. For a
+  /// windowed browser the alpha component is preserved only when
+  /// |allow_transparency| is true (1); otherwise a non-opaque value falls back
+  /// to the CefSettings.background_color value.
   ///
   cef_color_t background_color;
 
@@ -739,6 +750,16 @@ typedef struct _cef_browser_settings_t {
   /// supported with Chrome style.
   ///
   cef_state_t chrome_zoom_bubble;
+
+#if CEF_API_ADDED(CEF_NEXT)
+  ///
+  /// Set to true (1) to allow a non-opaque |background_color| for this windowed
+  /// browser. See the CefSettings.allow_transparency documentation for the
+  /// host window requirements. Has no effect on windowless (off-screen)
+  /// browsers.
+  ///
+  int allow_transparency;
+#endif
 
 #if CEF_API_ADDED(CEF_EXPERIMENTAL)
   ///

@@ -4,6 +4,8 @@
 
 #include "cef/libcef/browser/native/browser_platform_delegate_native_mac.h"
 
+#include "third_party/skia/include/core/SkColor.h"
+
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
 
@@ -289,6 +291,13 @@ bool CefBrowserPlatformDelegateNativeMac::CreateHostWindow() {
     window_delegate_ = [[CefWindowDelegate alloc] initWithWindow:new_window
                                                       andBrowser:browser_];
     [new_window setDelegate:window_delegate_];
+
+    if (SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
+      // A non-opaque background color requires a non-opaque host window (see
+      // CefSettings.allow_transparency).
+      [new_window setOpaque:NO];
+      [new_window setBackgroundColor:[NSColor clearColor]];
+    }
 
     parent_view = [new_window contentView];
     browser_view_rect = [parent_view bounds];

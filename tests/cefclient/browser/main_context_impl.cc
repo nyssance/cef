@@ -64,6 +64,10 @@ MainContextImpl::MainContextImpl(CefRefPtr<CefCommandLine> command_line,
       use_windowless_rendering_ &&
       command_line_->HasSwitch(switches::kTransparentPaintingEnabled);
 
+  // Whether windowed browsers may use a non-opaque background color.
+  allow_transparency_ = !use_windowless_rendering_ &&
+                        command_line_->HasSwitch(switches::kAllowTransparency);
+
   shared_texture_enabled_ =
       use_windowless_rendering_ &&
       command_line_->HasSwitch(switches::kSharedTextureEnabled);
@@ -116,8 +120,9 @@ MainContextImpl::MainContextImpl(CefRefPtr<CefCommandLine> command_line,
         ParseColor(command_line_->GetSwitchValue(switches::kBackgroundColor));
   }
 
-  if (background_color_ == 0 && !use_views_) {
-    // Set an explicit background color.
+  if (background_color_ == 0 && !use_views_ && !allow_transparency_) {
+    // Set an explicit background color. With |allow_transparency_| the default
+    // (fully transparent) color is kept to enable transparent painting.
     background_color_ = CefColorSetARGB(255, 255, 255, 255);
   }
 
@@ -160,12 +165,19 @@ std::string MainContextImpl::GetMainURL(
   } else if (use_views_ && command_line->HasSwitch(switches::kHideFrame)) {
     // Use the draggable regions test as the default URL for frameless windows.
     main_url = test_runner::GetTestURL("draggable");
+  } else if (allow_transparency_) {
+    // Use the transparency test as the default URL for transparent windows.
+    main_url = test_runner::GetTestURL("transparency");
   }
   return main_url;
 }
 
 cef_color_t MainContextImpl::GetBackgroundColor() {
   return background_color_;
+}
+
+bool MainContextImpl::AllowTransparency() {
+  return allow_transparency_;
 }
 
 bool MainContextImpl::UseViewsGlobal() {
@@ -198,6 +210,10 @@ void MainContextImpl::PopulateSettings(CefSettings* settings) {
 
   if (browser_background_color_ != 0) {
     settings->background_color = browser_background_color_;
+  }
+
+  if (allow_transparency_) {
+    settings->allow_transparency = true;
   }
 
   if (command_line_->HasSwitch("lang")) {
@@ -235,6 +251,10 @@ void MainContextImpl::PopulateBrowserSettings(CefBrowserSettings* settings) {
 
   if (browser_background_color_ != 0) {
     settings->background_color = browser_background_color_;
+  }
+
+  if (allow_transparency_) {
+    settings->allow_transparency = true;
   }
 
   if (command_line_->HasSwitch(switches::kHideChromeBubbles)) {

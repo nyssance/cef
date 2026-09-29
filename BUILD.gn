@@ -412,11 +412,14 @@ source_set("libcef_static_unittested") {
   sources = [
     "libcef/browser/devtools/devtools_util.cc",
     "libcef/browser/devtools/devtools_util.h",
+    "libcef/browser/background_color_util.cc",
+    "libcef/browser/background_color_util.h",
     "libcef/browser/geometry_util.h",
     "libcef/browser/geometry_util.cc",
   ]
 
   deps = [
+    "//skia",
     "//ui/gfx/geometry",
   ]
 
@@ -437,6 +440,7 @@ test("libcef_static_unittests") {
   testonly = true
 
   sources = [
+    "libcef/browser/background_color_util_unittest.cc",
     "libcef/browser/devtools/devtools_util_unittest.cc",
     "libcef/browser/geometry_util_unittest.cc",
   ]
@@ -2597,6 +2601,7 @@ if (is_mac) {
       libs = [
         "comctl32.lib",
         "d3d11.lib",
+        "dwmapi.lib",
         "imm32.lib",
         "oleacc.lib",
         "rpcrt4.lib",
@@ -2697,6 +2702,7 @@ if (is_mac) {
       libs = [
         "comctl32.lib",
         "d3d11.lib",
+        "dwmapi.lib",
         "imm32.lib",
         "oleacc.lib",
         "rpcrt4.lib",

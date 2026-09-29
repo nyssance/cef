@@ -4,6 +4,8 @@
 
 #include "cef/libcef/browser/native/native_widget_delegate.h"
 
+#include "third_party/skia/include/core/SkColor.h"
+
 #include <utility>
 
 #include "content/public/browser/web_contents.h"
@@ -29,8 +31,13 @@ class CefNativeContentsView : public views::View {
   void ViewHierarchyChanged(
       const views::ViewHierarchyChangedDetails& details) override {
     if (details.is_add && details.child == this) {
-      SetBackground(
-          views::CreateSolidBackground(window_delegate_->background_color_));
+      // A non-opaque background color is painted by the WebView itself so that
+      // the alpha channel reaches the compositor (see
+      // CefSettings.allow_transparency).
+      const SkColor background_color = window_delegate_->background_color_;
+      if (SkColorGetA(background_color) == SK_AlphaOPAQUE) {
+        SetBackground(views::CreateSolidBackground(background_color));
+      }
       SetLayoutManager(std::make_unique<views::FillLayout>());
       AddChildView(window_delegate_->web_view_.get());
     }
@@ -87,8 +94,12 @@ void CefNativeWidgetDelegate::Init(gfx::AcceleratedWidget parent_widget,
   params.child = true;
   // Set the WS_VISIBLE flag.
   params.type = views::Widget::InitParams::TYPE_CONTROL;
-  // Don't set the WS_EX_COMPOSITED flag.
-  params.opacity = views::Widget::InitParams::WindowOpacity::kOpaque;
+  // A translucent Widget is required for the alpha channel of a non-opaque
+  // background color to reach the screen (see CefSettings.allow_transparency).
+  // Otherwise don't set the WS_EX_COMPOSITED flag.
+  params.opacity = SkColorGetA(background_color_) == SK_AlphaOPAQUE
+                       ? views::Widget::InitParams::WindowOpacity::kOpaque
+                       : views::Widget::InitParams::WindowOpacity::kTranslucent;
   // Tell Aura not to draw the window frame on resize.
   params.remove_standard_frame = true;
   // Cause WidgetDelegate::CanActivate to return true. See comments in

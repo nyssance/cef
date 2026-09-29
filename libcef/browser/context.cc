@@ -5,6 +5,7 @@
 #include "cef/libcef/browser/context.h"
 
 #include <memory>
+#include <optional>
 
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
@@ -12,6 +13,7 @@
 #include "base/run_loop.h"
 #include "base/task/current_thread.h"
 #include "base/threading/thread_restrictions.h"
+#include "cef/libcef/browser/background_color_util.h"
 #include "cef/libcef/browser/browser_info_manager.h"
 #include "cef/libcef/browser/prefs/pref_helper.h"
 #include "cef/libcef/browser/request_context_impl.h"
@@ -74,23 +76,6 @@ void InitCrashReporter() {
 
 #endif  // BUILDFLAG(IS_WIN)
 
-bool GetColor(const cef_color_t cef_in, bool is_windowless, SkColor* sk_out) {
-  // Windowed browser colors must be fully opaque.
-  if (!is_windowless && CefColorGetA(cef_in) != SK_AlphaOPAQUE) {
-    return false;
-  }
-
-  // Windowless browser colors may be fully transparent.
-  if (is_windowless && CefColorGetA(cef_in) == SK_AlphaTRANSPARENT) {
-    *sk_out = SK_ColorTRANSPARENT;
-    return true;
-  }
-
-  // Ignore the alpha component.
-  *sk_out = SkColorSetRGB(CefColorGetR(cef_in), CefColorGetG(cef_in),
-                          CefColorGetB(cef_in));
-  return true;
-}
 
 // Convert |path_str| to a normalized FilePath.
 base::FilePath NormalizePath(const cef_string_t& path_str,
@@ -451,14 +436,21 @@ SkColor CefContext::GetBackgroundColor(
                                   ? false
                                   : !!settings_.windowless_rendering_enabled);
 
-  // Default to opaque white if no acceptable color values are found.
-  SkColor sk_color = SK_ColorWHITE;
-
-  if (!browser_settings ||
-      !GetColor(browser_settings->background_color, is_windowless, &sk_color)) {
-    GetColor(settings_.background_color, is_windowless, &sk_color);
+  // Each color is checked against the allow_transparency value from the same
+  // settings structure. Default to opaque white if no acceptable color values
+  // are found.
+  std::optional<SkColor> color;
+  if (browser_settings) {
+    color = background_color_util::ResolveBackgroundColor(
+        browser_settings->background_color, is_windowless,
+        !!browser_settings->allow_transparency);
   }
-  return sk_color;
+  if (!color) {
+    color = background_color_util::ResolveBackgroundColor(
+        settings_.background_color, is_windowless,
+        !!settings_.allow_transparency);
+  }
+  return color.value_or(SK_ColorWHITE);
 }
 
 CefTraceSubscriber* CefContext::GetTraceSubscriber() {

@@ -519,6 +519,12 @@ void RootWindowMacImpl::CreateRootWindow(const CefBrowserSettings& settings,
                                           backing:NSBackingStoreBuffered
                                             defer:NO];
   [window_ setTitle:@"cefclient"];
+
+  if (MainContext::Get()->AllowTransparency()) {
+    // A translucent browser needs a non-opaque host window.
+    [window_ setOpaque:NO];
+    [window_ setBackgroundColor:[NSColor clearColor]];
+  }
   // No dark mode, please
   window_.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 

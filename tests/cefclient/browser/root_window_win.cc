@@ -4,6 +4,7 @@
 
 #include "tests/cefclient/browser/root_window_win.h"
 
+#include <dwmapi.h>
 #include <shellscalingapi.h>
 
 #include <memory>
@@ -548,6 +549,14 @@ void RootWindowWin::CreateRootWindow(const CefBrowserSettings& settings,
   CreateWindowEx(dwExStyle, window_class.c_str(), window_title.c_str(), dwStyle,
                  x, y, width, height, nullptr, nullptr, hInstance, this);
   CHECK(hwnd_);
+
+  if (MainContext::Get()->AllowTransparency()) {
+    // Extend the DWM frame into the entire client area so that the alpha
+    // channel of the translucent browser widget is composited against the
+    // desktop instead of an opaque window background.
+    const MARGINS margins = {-1, -1, -1, -1};
+    ::DwmExtendFrameIntoClientArea(hwnd_, &margins);
+  }
 
   if (!called_enable_non_client_dpi_scaling_ && IsProcessPerMonitorDpiAware()) {
     // This call gets Windows to scale the non-client area when WM_DPICHANGED

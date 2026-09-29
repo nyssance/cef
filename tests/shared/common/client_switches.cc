@@ -23,6 +23,7 @@ const char kUrl[] = "url";
 const char kOffScreenRenderingEnabled[] = "off-screen-rendering-enabled";
 const char kOffScreenFrameRate[] = "off-screen-frame-rate";
 const char kTransparentPaintingEnabled[] = "transparent-painting-enabled";
+const char kAllowTransparency[] = "allow-transparency";
 const char kShowUpdateRect[] = "show-update-rect";
 const char kFakeScreenBounds[] = "fake-screen-bounds";
 const char kSharedTextureEnabled[] = "shared-texture-enabled";

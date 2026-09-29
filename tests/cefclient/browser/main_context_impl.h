@@ -32,6 +32,7 @@ class MainContextImpl : public MainContext {
   std::string GetAppWorkingDirectory() override;
   std::string GetMainURL(CefRefPtr<CefCommandLine> command_line) override;
   cef_color_t GetBackgroundColor() override;
+  bool AllowTransparency() override;
   bool UseViewsGlobal() override;
   bool UseAlloyStyleGlobal() override;
   bool TouchEventsEnabled() override;
@@ -73,6 +74,7 @@ class MainContextImpl : public MainContext {
 
   cef_color_t background_color_ = 0;
   cef_color_t browser_background_color_ = 0;
+  bool allow_transparency_ = false;
   bool use_windowless_rendering_;
   int windowless_frame_rate_ = 0;
   bool use_views_;
